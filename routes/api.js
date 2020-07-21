@@ -18,7 +18,7 @@ module.exports = (db) => {
       isSearch = true;
     }
     if (cString && string) {
-      query.push(`stringdata LIKE  '%${string}%'`);
+      query.push(`stringdata LIKE '%${string}%'`);
       isSearch = true;
     }
     if (cInteger && integer) {
@@ -54,13 +54,13 @@ module.exports = (db) => {
       if (err) return res.status(500).json({
         error: true,
         message: err
-      }) 
+      })
       else if (data.rows[0].total == 0) {
         return res.send(`Data tidak ditemukan`);
       }
-      const totalData = parseInt(data.rows[0].total); 
+      const totalData = parseInt(data.rows[0].total);
       const pages = Math.ceil(totalData / limit);
-     
+
       let sql = `SELECT * FROM bread ${search} ORDER BY id LIMIT $1 OFFSET $2`;
       db.query(sql, [limit, offset], (err, data) => {
         if (err) {
@@ -98,20 +98,21 @@ module.exports = (db) => {
     });
   });
 
-  //Delete Data
-  router.delete('/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const sql = `DELETE FROM bread WHERE id = $1`;
-    db.query(sql, [id], (err) => {
+  //Add Data
+  router.post('/', function (req, res) {
+    let sql = 'INSERT INTO bread (stringdata, integerdata, floatdata, booleandata, datedata) VALUES  ($1,$2,$3,$4,$5)';
+    let add = [req.body.stringdata, parseInt(req.body.integerdata), parseFloat(req.body.floatdata), JSON.parse(req.body.booleandata), req.body.datedata];
+    db.query(sql, add, (err) => {
       if (err) return res.status(500).json({
         error: true,
         message: err
       })
       res.status(201).json({
-        message: "Data berhasil terhapus"
+        error: false,
+        message: 'Data berhasil ditambahkan'
       })
-    })
-  })
+    });
+  });
 
   //Edit Data
   router.put('/:id', (req, res) => {
@@ -129,21 +130,20 @@ module.exports = (db) => {
     })
   });
 
-  //Add Data
-  router.post('/', function (req, res) {
-    let sql = 'INSERT INTO bread (stringdata, integerdata, floatdata, booleandata, datedata) VALUES  ($1,$2,$3,$4,$5)';
-    let add = [req.body.stringdata, parseInt(req.body.integerdata), parseFloat(req.body.floatdata), JSON.parse(req.body.booleandata), req.body.datedata];
-    db.query(sql, add, (err) => {
+  //Delete Data
+  router.delete('/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+    const sql = `DELETE FROM bread WHERE id = $1`;
+    db.query(sql, [id], (err) => {
       if (err) return res.status(500).json({
         error: true,
         message: err
       })
       res.status(201).json({
-        error: false,
-        message: 'Data berhasil ditambahkan'
+        message: "Data berhasil terhapus"
       })
-    });
-  });
+    })
+  })
 
   return router;
 }
